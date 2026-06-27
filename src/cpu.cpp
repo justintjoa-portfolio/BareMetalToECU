@@ -12,7 +12,7 @@ std::uint32_t Cpu::pc() const {
 }
 
 std::uint32_t Cpu::sp() const {
-  return sp;
+  return sp_;
 }
 
 }  // namespace baremetal

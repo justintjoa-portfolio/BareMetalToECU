@@ -28,8 +28,8 @@ class Firmware {
   void Main();
 
  private:
-  std::shared_ptr<Cpu> cpu_;
-  std::shared_ptr<Uart> uart_;
+  Cpu* cpu_;
+  Uart* uart_;
 
   VectorTable vector_table_;
 };

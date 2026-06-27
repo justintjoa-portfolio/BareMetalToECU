@@ -88,10 +88,10 @@ class Cpu {
              std::uint32_t reset_pc);
 
   [[nodiscard]]
-  std::uint32_t pc() const noexcept;
+  std::uint32_t pc() const;
 
   [[nodiscard]]
-  std::uint32_t sp() const noexcept;
+  std::uint32_t sp() const;
 
  private:
   std::uint32_t pc_ = 0;

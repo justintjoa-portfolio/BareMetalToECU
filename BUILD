@@ -1,17 +1,13 @@
-load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
-
 cc_binary(
     name = "stage0_hello",
     srcs = [
-        "src/main.cc",
-        "src/cpu.cc",
-        "src/firmware.cc",
-        "src/uart.cc",
-    ],
-    hdrs = [
+        "src/main.cpp",
+        "src/cpu.cpp",
         "src/cpu.h",
-        "src/firmware.h",
+        "src/uart.cpp",
         "src/uart.h",
+        "src/firmware.cpp",
+        "src/firmware.h",
     ],
     copts = [
         "-std=c++20",
