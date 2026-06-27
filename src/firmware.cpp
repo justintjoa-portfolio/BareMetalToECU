@@ -1,131 +1,44 @@
-#include "src/firmware.h"
+#include "firmware.h"
 
 #include <iostream>
 
+namespace {
+
+// These constants stand in for linker-generated symbols.
+// In real firmware, names like _sidata, _sdata, _edata,
+// _sbss, and _ebss come from the linker script.
+constexpr uint32_t kDataLoadAddress = 0x08000200;  // Flash source
+constexpr uint32_t kDataRunAddress = 0x20000000;   // RAM destination
+
+constexpr uint32_t kBssStartAddress = 0x20000100;
+constexpr uint32_t kBssSizeBytes = 4;
+
+} 
+
 namespace baremetal {
 
-Firmware::Firmware(Cpu* cpu, Uart* uart)
-    : cpu_(cpu), uart_(uart) {}
+Firmware::Firmware(Uart& uart, MemoryMap& memory_map): uart_(uart), memory_map_(memory_map) {}
 
-// Simulate the moment electrical power is applied to a Cortex-M.
-//
-// Real hardware:
-//
-//   Power On
-//      ↓
-//   CPU Reset
-//      ↓
-//   Read vector table from Flash
-//      ↓
-//   SP = *(0x00000000)
-//      ↓
-//   PC = *(0x00000004)
-//      ↓
-//   Jump to Reset_Handler
-//
-// The CPU does NOT know:
-//
-//   main()
-//   C++
-//   std::cout
-//   UART
-//
-// It only knows:
-//
-//   Load SP
-//   Load PC
-//   Execute instructions at PC
-//
-void Firmware::PowerOn() {
-  std::cout << "Power on\n";
+void Firmware::CopyDataSection() {
+  std::cout << "Copying .data from Flash to RAM\n";
 
-  // On Cortex-M, the first entry in the vector table is the
-  // initial Stack Pointer.
-  //
-  // Example:
-  //
-  // Flash
-  //
-  // 0x00000000 -> 0x20000400   initial SP
-  // 0x00000004 -> Reset_Handler
-  //
-  std::cout << "CPU reads vector_table[0] for initial SP\n";
-
-  // The second entry is the Reset_Handler address.
-  //
-  // The CPU will begin execution here.
-  //
-  std::cout << "CPU reads vector_table[1] for Reset_Handler PC\n";
-
-  // Simulate:
-  //
-  // SP = vector_table[0]
-  // PC = vector_table[1]
-  //
-  // This runs after power on and checks for power supply stability, 
-  // and release reset allowed for Cortex CPU.
-  cpu_->Reset(
-      vector_table_.initial_sp,
-      vector_table_.reset_handler_address);
-
-  std::cout << "SP = 0x" << std::hex << cpu_->sp() << "\n";
-  std::cout << "PC = 0x" << std::hex << cpu_->pc() << "\n";
-
-  // In real hardware:
-  //
-  // The CPU would now jump to the address stored in PC.
-  //
-  // In our simulator we call ResetHandler() directly.
-  //
-  ResetHandler();
+  auto value = memory_map_.NormalizeAddressAndRead32(kDataLoadAddress);
+  memory_map_.NormalizeAddressAndWrite32(kDataRunAddress, value);
 }
 
-// Reset_Handler is startup code.
-//
-// This is firmware.
-//
-// This code runs BEFORE main().
-//
-// Real startup code often:
-//
-//   Copy .data from Flash -> RAM
-//
-//   Zero .bss
-//
-//   Initialize clocks
-//
-//   Initialize C/C++ runtime
-//
-//   Call main()
-//
-// Linux does something similar before main(), but hides it from you.
-//
-// Bare metal exposes it.
-//
+void Firmware::ZeroBssSection() {
+  std::cout << "Zeroing .bss in RAM\n";
+  memory_map_.NormalizeAddressAndWrite32(kBssStartAddress, 0);
+}
+
 void Firmware::ResetHandler() {
-  std::cout << "Reset_Handler running\n";
+  CopyDataSection();
+  ZeroBssSection();
+}
 
-  // Example:
-  //
-  // int initialized = 5;
-  //
-  // Flash:
-  //
-  //   initialized = 5
-  //
-  // RAM before startup:
-  //
-  //   garbage
-  //
-  // Reset_Handler copies:
-  //
-  // Flash -> RAM
-  //
-  std::cout
-      << "Stage 0: skipping .data copy and .bss zero for now\n";
-
-  std::cout << "Reset_Handler calls main\n";
-
+void Firmware::ResetHandlerAndMain() {
+  ResetHandler();
+  // After handling reset, run 
   Main();
 }
 
@@ -167,7 +80,7 @@ void Firmware::Main() {
   //
   // Here we fake UART using std::cout.
   //
-  uart_->Write(
+  uart_.Write(
       "Hello World from mock bare metal Cortex-M");
 }
 
