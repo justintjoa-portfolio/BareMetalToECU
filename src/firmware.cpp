@@ -62,6 +62,8 @@ void Firmware::PowerOn() {
   // SP = vector_table[0]
   // PC = vector_table[1]
   //
+  // This runs after power on and checks for power supply stability, 
+  // and release reset allowed for Cortex CPU.
   cpu_->Reset(
       vector_table_.initial_sp,
       vector_table_.reset_handler_address);
