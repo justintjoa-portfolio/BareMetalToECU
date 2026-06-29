@@ -13,7 +13,9 @@ cc_binary(
         "src/memory_region.cpp",
         "src/memory_region.h",
         "src/st_link.h",
-        "src/st_link.cpp"
+        "src/st_link.cpp",
+        "src/gpio.cpp", 
+        "src/gpio.h"
     ],
     copts = [
         "-std=c++20",

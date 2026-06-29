@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "gpio.h"
 #include "memory_region.h"
 
 namespace baremetal {
@@ -21,6 +22,7 @@ class MemoryMap {
  private:
   MemoryRegion flash_;
   MemoryRegion ram_;
+  Gpio gpioa_;
 }; 
 
 }  // namespace baremetal
