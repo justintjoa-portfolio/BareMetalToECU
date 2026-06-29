@@ -1,102 +1,41 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include "memory_map.h"
 #include <cstdint>
 
 namespace baremetal {
 
 class Cpu {
  public:
-  // Default constructor.
-  //
-  // Usage:
-  //
-  // Cpu cpu;
-  //
-  Cpu() = default;
+  Cpu(MemoryMap& memory_map);
 
-  // Default destructor.
-  //
-  // Usage:
-  //
-  // {
-  //   Cpu cpu;
-  // }
-  // // Destructor called here automatically.
-  //
   ~Cpu() = default;
 
-  // Copy constructor.
-  //
-  // This would allow:
-  //
-  // Cpu cpu1;
-  // Cpu cpu2(cpu1);
-  //
-  // or:
-  //
-  // Cpu cpu2 = cpu1;
-  //
-  // We forbid this because there is only one CPU.
-  //
   Cpu(const Cpu&) = delete;
 
-  // Copy assignment operator.
-  //
-  // This would allow:
-  //
-  // Cpu cpu1;
-  // Cpu cpu2;
-  //
-  // cpu2 = cpu1;
-  //
-  // We forbid assigning one CPU to another.
-  //
   Cpu& operator=(const Cpu&) = delete;
 
-  // Move constructor.
-  //
-  // This would allow:
-  //
-  // Cpu cpu1;
-  //
-  // Cpu cpu2(std::move(cpu1));
-  //
-  // or:
-  //
-  // Cpu cpu2 = std::move(cpu1);
-  //
-  // Moving a CPU does not make sense because CPU models
-  // unique hardware.
-  //
   Cpu(Cpu&&) = delete;
 
-  // Move assignment operator.
-  //
-  // This would allow:
-  //
-  // Cpu cpu1;
-  // Cpu cpu2;
-  //
-  // cpu2 = std::move(cpu1);
-  //
-  // Again, CPUs are not movable.
-  //
   Cpu& operator=(Cpu&&) = delete;
 
-  void Reset(std::uint32_t initial_sp,
-             std::uint32_t reset_pc);
+  uint32_t QueryVectorTable(uint32_t offset);
 
-  [[nodiscard]]
-  std::uint32_t pc() const;
-
-  [[nodiscard]]
-  std::uint32_t sp() const;
+  void Reset();
 
  private:
-  std::uint32_t pc_ = 0;
+  MemoryMap& memory_map_;
 
-  std::uint32_t sp_ = 0;
+  // CPU register that holds the address of the 
+  // instruction the CPU is about to execute, or is 
+  // currently executing depending on architecture detail.
+  std::uint32_t program_counter_ = 0;
+
+  // CPU register that points to the current top of the stack in RAM.
+  // The CPU uses the stack to store return addresses, local variables, and saved
+  // registers during function calls and interrupts.
+  std::uint32_t stack_pointer_ = 0;
 };
 
 }  // namespace baremetal

@@ -4,34 +4,31 @@
 #include <cstdint>
 
 #include "src/cpu.h"
+#include "src/memory_map.h"
 #include "src/uart.h"
 
 namespace baremetal {
 
-struct VectorTable {
-  std::uint32_t initial_sp = 0x20000400;  // Default initial SP value for Cortex-M
-  std::uint32_t reset_handler_address = 0x00000100; // Default Reset_Handler address for Cortex-M
-};
-
 class Firmware {
  public:
-  Firmware(Cpu* cpu, Uart* uart);
+  Firmware(Uart& uart, MemoryMap& memory_map);
 
   Firmware(const Firmware&) = delete; 
   Firmware(Firmware&&) = delete; 
   Firmware& operator=(const Firmware&) = delete; 
   Firmware& operator=(Firmware&&) = delete; 
 
-
-  void PowerOn();
-  void ResetHandler();
-  void Main();
+  void ResetHandlerAndMain();
 
  private:
-  Cpu* cpu_;
-  Uart* uart_;
+  void Main();
+  void CopyDataSection();
+  void ZeroBssSection();
+  void ResetHandler();
 
-  VectorTable vector_table_;
+
+  Uart& uart_;
+  MemoryMap& memory_map_;
 };
 
 }  // namespace baremetal
