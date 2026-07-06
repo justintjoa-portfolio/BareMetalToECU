@@ -10,6 +10,9 @@ constexpr uint32_t kBootAliasSize = 1024;
 constexpr uint32_t kFlashSize = 1024;
 constexpr size_t kRamSize = 1024;
 
+constexpr uint32_t kGpioAStartingAddr = 0x48000000;
+constexpr uint32_t kGpioASize = 1024;
+
 uint32_t NormalizeAddress(uint32_t address) {
   if (address >= kBootAliasStartingAddr &&
       address < kBootAliasStartingAddr + kBootAliasSize) {
@@ -41,15 +44,21 @@ uint32_t MemoryMap::NormalizeAddressAndRead32(uint32_t address) const {
 
 void MemoryMap::NormalizeAddressAndWrite32(uint32_t address,
                                            uint32_t value) {
-  const uint32_t normalized_address = NormalizeAddress(address);
+  if (address >= kGpioAStartingAddr &&
+    address < kGpioAStartingAddr + kGpioASize) {
+    gpioa_.Write32(address - kGpioAStartingAddr, value);
+    return;
+  }                                         
+  
+  const uint32_t non_gpio_normalized_address = NormalizeAddress(address);
 
   MemoryRegion& region =
-      (normalized_address < kRamStartingAddr) ? flash_ : ram_;
+      (non_gpio_normalized_address < kRamStartingAddr) ? flash_ : ram_;
 
-  region.Write8(normalized_address + 0, static_cast<uint8_t>(value & 0xFF));
-  region.Write8(normalized_address + 1, static_cast<uint8_t>((value >> 8) & 0xFF));
-  region.Write8(normalized_address + 2, static_cast<uint8_t>((value >> 16) & 0xFF));
-  region.Write8(normalized_address + 3, static_cast<uint8_t>((value >> 24) & 0xFF));
+  region.Write8(non_gpio_normalized_address + 0, static_cast<uint8_t>(value & 0xFF));
+  region.Write8(non_gpio_normalized_address + 1, static_cast<uint8_t>((value >> 8) & 0xFF));
+  region.Write8(non_gpio_normalized_address + 2, static_cast<uint8_t>((value >> 16) & 0xFF));
+  region.Write8(non_gpio_normalized_address + 3, static_cast<uint8_t>((value >> 24) & 0xFF));
 }
 
 }  // namespace baremetal

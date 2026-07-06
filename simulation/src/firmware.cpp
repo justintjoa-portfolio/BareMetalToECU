@@ -13,6 +13,10 @@ constexpr uint32_t kDataRunAddress = 0x20000000;   // RAM destination
 constexpr uint32_t kBssStartAddress = 0x20000100;
 constexpr uint32_t kBssSizeBytes = 4;
 
+constexpr uint32_t kGpioABase = 0x48000000;
+constexpr uint32_t kGpioAModer = kGpioABase + 0x00;
+constexpr uint32_t kGpioAOdr = kGpioABase + 0x14;
+
 } 
 
 namespace baremetal {
@@ -80,6 +84,9 @@ void Firmware::Main() {
   //
   // Here we fake UART using std::cout.
   //
+  memory_map_.NormalizeAddressAndWrite32(kGpioAModer, 0x400);
+  memory_map_.NormalizeAddressAndWrite32(kGpioAOdr, 1u << 5);
+  memory_map_.NormalizeAddressAndWrite32(kGpioAOdr, 0);
   uart_.Write(
       "Hello World from mock bare metal Cortex-M");
 }
